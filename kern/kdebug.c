@@ -53,7 +53,16 @@ load_user_dwarf_info(struct Dwarf_Addrs *addrs) {
 
     /* Load debug sections from curenv->binary elf image */
     // LAB 8: Your code here
-    (void)sections;
+    struct Elf * elf = (void *)binary;
+    struct Secthdr * sh = (void *)(binary + elf->e_shoff);
+    const char * table = (const char *)binary + sh[elf->e_shstrndx].sh_offset;
+    for (; (uint8_t *)sh < binary + elf->e_shoff + elf->e_shentsize * elf->e_shnum; sh++) {
+        for (uint32_t i = 0; i < sizeof(sections) / sizeof (*sections); i++)
+            if (!strcmp(&table[sh->sh_name], sections[i].name)) {
+                *sections[i].start = binary + sh->sh_offset;
+                *sections[i].end = binary + sh->sh_offset + sh->sh_size;
+            }
+    }
 }
 
 #define UNKNOWN       "<unknown>"
@@ -82,6 +91,9 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
      * Make sure that you fully understand why it is necessary. */
 
     // LAB 8: Your code here:
+    uint64_t old_cr3 = rcr3();
+    if (old_cr3 != kspace.cr3)
+        lcr3(kspace.cr3);
 
     /* Load dwarf section pointers from either
      * currently running program binary or use
@@ -92,7 +104,10 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
     // LAB 8: Your code here:
 
     struct Dwarf_Addrs addrs;
-    load_kernel_dwarf_info(&addrs);
+    if (addr >= MAX_USER_ADDRESS) // kernel space
+        load_kernel_dwarf_info(&addrs);
+    else
+        load_user_dwarf_info(&addrs);
 
     Dwarf_Off offset = 0, line_offset = 0;
     int res = info_by_address(&addrs, addr, &offset);
