@@ -429,10 +429,9 @@ env_destroy(struct Env *env) {
 
     // LAB 3: Your code here
     env->env_status = ENV_DYING;
-    if (env == curenv) {
-        env_free(env);
+    env_free(env);
+    if (env == curenv)
         sched_yield();
-    }
 
     /* Reset in_page_fault flags in case *current* environment
      * is getting destroyed after performing invalid memory access. */

@@ -277,6 +277,7 @@ trap_dispatch(struct Trapframe *tf) {
     case T_PGFLT:
         /* Handle processor exceptions. */
         // LAB 9: Your code here.
+        page_fault_handler(tf);
         return;
     case T_BRKPT:
         // LAB 8: Your code here.
@@ -445,25 +446,42 @@ page_fault_handler(struct Trapframe *tf) {
     /* Force allocation of exception stack page to prevent memcpy from
      * causing pagefault during another pagefault */
     // LAB 9: Your code here:
-
-    /* Force allocate exception stack page to prevent memcpy from
-     * causing pagefault during another pagefault */
-    // LAB 9: Your code here:
+    force_alloc_page(&curenv->address_space, USER_EXCEPTION_STACK_TOP - PAGE_SIZE, PAGE_SIZE);
 
     /* Assert existance of exception stack */
     // LAB 9: Your code here:
+    uintptr_t user_rsp = tf->tf_rsp < USER_EXCEPTION_STACK_TOP && tf->tf_rsp > USER_EXCEPTION_STACK_TOP - PAGE_SIZE ?
+        tf->tf_rsp - sizeof(uintptr_t) : USER_EXCEPTION_STACK_TOP;
+    user_rsp -= sizeof(struct UTrapframe);
+    user_mem_assert(curenv, (void *)user_rsp, sizeof(struct UTrapframe), PROT_W);
 
     /* Build local copy of UTrapframe */
     // LAB 9: Your code here:
+    struct UTrapframe user_tf;
+    user_tf.utf_fault_va = cr2;
+    user_tf.utf_err      = tf->tf_err;
+    user_tf.utf_regs     = tf->tf_regs;
+    user_tf.utf_rip      = tf->tf_rip;
+    user_tf.utf_rflags   = tf->tf_rflags;
+    user_tf.utf_rsp      = tf->tf_rsp;
+    tf->tf_rsp        = user_rsp;
+    tf->tf_rip        = (uintptr_t)curenv->env_pgfault_upcall;
 
     /* And then copy it userspace (nosan_memcpy()) */
     // LAB 9: Your code here:
+    struct AddressSpace *old = switch_address_space(&curenv->address_space);
+    set_wp(0);
+    nosan_memcpy((void *)(user_rsp), (void *)&user_tf, sizeof(struct UTrapframe));
+    set_wp(1);
+    switch_address_space(old);
 
     /* Reset in_page_fault flag */
     // LAB 9: Your code here:
+    in_page_fault = false;
 
     /* Rerun current environment */
     // LAB 9: Your code here:
+    env_run(curenv);
 
     while (1)
         ;
