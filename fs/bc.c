@@ -33,6 +33,23 @@ bc_pgfault(struct UTrapframe *utf) {
      * Hint: first round addr to page boundary. fs/ide.c has code to read
      * the disk. */
     // LAB 10: Your code here
+    addr = ROUNDDOWN(addr, BLKSIZE);
+    int res = sys_alloc_region(CURENVID, addr, BLKSIZE, PROT_RW);
+    if (res)
+        panic("bc_pgfault: can't alloc memmory! %i", res);
+    /* sys_alloc_region() allocates pages lazily, so addr's corresponding physical address is
+     * zero_page_raw address (see pmap.c). Below nvme_read() will take this physical address and
+     * pass in to NVMe controller as an address to deliver data to. This way zero_page_raw will be
+     * corrupted and simultaneously used as reference for all blocks. To avoid this we need to map
+     * addr not lazily. The simpliest way to do this is to write something on it.
+     * P.S.: Do we have any syscalls to map pages not lazily? Seems that no =( */
+    /* TLDR: lazy allocation doesn't work with NVMe because it uses physical address directly */
+    *(char *)addr = 0;
+
+    res = nvme_read(blockno * BLKSECTS, addr, BLKSECTS);
+    if (res != NVME_OK)
+        panic("bc_pgfault on va %p failed: reading\n", addr);
+
 
     return 1;
 }
@@ -55,7 +72,15 @@ flush_block(void *addr) {
         panic("reading non-existent block %08x out of %08x\n", blockno, super->s_nblocks);
 
     // LAB 10: Your code here.
-    (void)res;
+    addr = ROUNDDOWN(addr, BLKSIZE);
+    if (!is_page_present(addr) || !is_page_dirty(addr))
+        return;
+    res = nvme_write(blockno * BLKSECTS, addr, BLKSECTS);
+    if (res != NVME_OK)
+        panic("flush_block of va %p failed: writing\n", addr);
+    res = sys_map_region(CURENVID, addr, CURENVID, addr, BLKSIZE, PTE_SYSCALL & get_prot(addr));
+    if (res)
+        panic("flush_block of va %p failed: clearing PTE_D\n", addr);
 
 
     assert(!is_page_dirty(addr));

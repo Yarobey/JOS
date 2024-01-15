@@ -383,24 +383,24 @@ load_icode(struct Env *env, uint8_t *binary, size_t size) {
  */
 void
 env_create(uint8_t *binary, size_t size, enum EnvType type) {
-    // LAB 3: Your code here
-    struct Env *env;
-    // if (env_alloc(&env, 0, type) < 0) {
-    //     panic("env_alloc: can't allocate new environment.");
-    // }
-    // load_icode(env, binary, size);
-    // LAB 8: Your code here
-    int status = env_alloc(&env, 0, type);
-    if (status < 0)
-        panic("Can't allocate new environment : %i", status);
-
-    status = load_icode(env, binary, size);
-    if (status < 0)
-        panic("Could not load executable : %i", status);
-
-    env->binary = binary;
-    env->env_type = type;
     // LAB 10: Your code here
+    struct Env *env;
+    if (env_alloc(&env, 0, type) < 0) {
+        panic("env_alloc: can't allocate new environment.");
+    }
+
+    env->env_type = type;
+    env->binary = binary;
+    env->env_tf.tf_rflags &= ~FL_IOPL_MASK;
+    if (type == ENV_TYPE_FS)
+        env->env_tf.tf_rflags |= FL_IOPL_3;
+    else
+        env->env_tf.tf_rflags |= FL_IOPL_0;
+    
+
+    if (load_icode(env, binary, size) < 0) {
+        panic("load_icode: can't load set up new binary.");
+    }
 }
 
 
