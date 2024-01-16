@@ -61,8 +61,15 @@ foreach_shared_region(int (*fun)(void *start, void *end, void *arg), void *arg) 
      * NOTE: Skip over larger pages/page directories for efficiency */
     // LAB 11: Your code here:
 
-    int res = 0;
-    (void)fun, (void)arg;
+    for (uintptr_t addr_4 = 0; addr_4 < MAX_USER_ADDRESS; addr_4 += 1ULL << PML4_SHIFT)
+        if (uvpml4[VPML4(addr_4)] & PTE_P)
+            for (uintptr_t addr_3 = 0; addr_3 < 1ULL << PML4_SHIFT; addr_3 += 1ULL << PDP_SHIFT)
+                if (uvpdp[VPDP(addr_4 + addr_3)] & PTE_P)
+                    for (uintptr_t addr_2 = 0; addr_2 < 1ULL << PDP_SHIFT; addr_2 += 1ULL << PD_SHIFT)
+                        if (uvpd[VPD(addr_4 + addr_3 + addr_2)] & PTE_P)
+                            for (uintptr_t addr_1 = 0; addr_1 < 1ULL << PD_SHIFT; addr_1 += 1ULL << PT_SHIFT)
+                                if (uvpt[VPT(addr_4 + addr_3 + addr_2 + addr_1)] & PTE_P && uvpt[VPT(addr_4 + addr_3 + addr_2 + addr_1)] & PTE_SHARE)
+                                    fun((void *)(addr_4 + addr_3 + addr_2 + addr_1), (void *)(addr_4 + addr_3 + addr_2 + addr_1 + PAGE_SIZE), arg);
 
-    return res;
+    return 0;
 }
