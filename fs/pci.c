@@ -40,12 +40,8 @@ pci_iop_select_address(struct PciDevice *pcid, uint8_t reg) {
 
 static inline uint32_t
 pci_iop_read_dword(struct PciDevice *pcid, uint8_t reg) {
-    /* Read 32-bit value from the selected PCI address
-     * using I/O-port-based access mechanism.
-     * TIP: Select address using pci_iop_select_address()
-     *      and read from PCI_PORT_DATA. */
-    // LAB 10: Your code here
     pci_iop_select_address(pcid, reg);
+    /* Read 32-bit value from the selected PCI address */
     return inl(PCI_PORT_DATA);
 }
 
@@ -96,7 +92,6 @@ pci_ecam_read_dword(struct PciDevice *pcid, uint8_t reg) {
     /* Read 32-bit value from register reg using ECAM.
      * TIP: Use pci_ecam_addr(). Don't forget to align
      * reg to 4 byte granularity */
-    // LAB 10: Your code here
     return *(volatile uint32_t *)pci_ecam_addr(pcid, reg & 0xffc);
 }
 

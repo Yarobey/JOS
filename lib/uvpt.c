@@ -59,8 +59,6 @@ int
 foreach_shared_region(int (*fun)(void *start, void *end, void *arg), void *arg) {
     /* Calls fun() for every shared region.
      * NOTE: Skip over larger pages/page directories for efficiency */
-    // LAB 11: Your code here:
-
     for (uintptr_t addr_4 = 0; addr_4 < MAX_USER_ADDRESS; addr_4 += 1ULL << PML4_SHIFT)
         if (uvpml4[VPML4(addr_4)] & PTE_P)
             for (uintptr_t addr_3 = 0; addr_3 < 1ULL << PML4_SHIFT; addr_3 += 1ULL << PDP_SHIFT)

@@ -79,29 +79,27 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf) {
 
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf) {
-    // LAB 2: Your code here
     uint64_t rbp = read_rbp();
     uint64_t rip; 
     struct Ripdebuginfo info;
     cprintf("Stack backtrace:\n");
     do {
-        rip = *(uint64_t *)(rbp + 8);
-        debuginfo_rip(rip, &info);
-        cprintf("  rbp %016lx  rip %016lx\n", rbp, rip);
-        cprintf("    %s:%d: %*s+%ld\n", info.rip_file, info.rip_line,
-            info.rip_fn_namelen, info.rip_fn_name, rip - info.rip_fn_addr);
-        rbp = *(uint64_t *)rbp;
+	    rip = *(uint64_t *)(rbp + 8);
+	    debuginfo_rip(rip, &info);
+	    cprintf("  rbp %016lx  rip %016lx\n", rbp, rip);
+	    cprintf("    %s:%d: %*s+%ld\n", info.rip_file, info.rip_line,
+	        info.rip_fn_namelen, info.rip_fn_name, rip - info.rip_fn_addr);
+	    rbp = *(uint64_t *)rbp;
     } while (rbp != 0);
     return 0;
 }
 
 /* Implement timer_start (mon_start), timer_stop (mon_stop), timer_freq (mon_frequency) commands. */
-// LAB 5: Your code here:
 
 int
 mon_start(int argc, char **argv, struct Trapframe *tf) {
     if (argc != 2) {
-        cprintf("timer_start: timer name is missing.\n");
+        cprintf("timer_start: no given name of timer.\n");
         return 1;
     }
     timer_start(argv[1]);
@@ -119,14 +117,13 @@ mon_stop(int argc, char **argv, struct Trapframe *tf) {
 int
 mon_frequency(int argc, char **argv, struct Trapframe *tf) {
     if (argc != 2) {
-        cprintf("timer_freq: timer name is missing.\n");
+        cprintf("timer_freq: no given name of timer.\n");
         return 1;
     }
     timer_cpu_frequency(argv[1]);
     return 0;
 }
 
-// LAB 6: Your code here
 /* Implement memory (mon_memory) commands. */
 int
 mon_memory(int argc, char **argv, struct Trapframe *tf) {
@@ -138,15 +135,13 @@ mon_memory(int argc, char **argv, struct Trapframe *tf) {
  * (using dump_virtual_tree(), dump_page_table())*/
 int
 mon_pagetable(int argc, char **argv, struct Trapframe *tf) {
-    // LAB 7: Your code here
-    dump_virtual_tree(kspace.root, MAX_CLASS);
+    dump_page_table(current_space->pml4);
     return 0;
 }
 
 int
 mon_virt(int argc, char **argv, struct Trapframe *tf) {
-    // LAB 7: Your code here
-    dump_page_table(kspace.pml4);
+    dump_virtual_tree(current_space->root, MAX_CLASS);
     return 0;
 }
 
@@ -158,7 +153,6 @@ mon_dumpcmos(int argc, char **argv, struct Trapframe *tf) {
     // 10: 00 ..
     // Make sure you understand the values read.
     // Hint: Use cmos_read8()/cmos_write8() functions.
-    // LAB 4: Your code here
     for (int i = 0; i < CMOS_START + CMOS_SIZE; i += 0x10) {
         cprintf("%02x:", i);
         for (int j = i; j < i + 0x10; j++)

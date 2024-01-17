@@ -52,7 +52,6 @@ load_user_dwarf_info(struct Dwarf_Addrs *addrs) {
     memset(addrs, 0, sizeof(*addrs));
 
     /* Load debug sections from curenv->binary elf image */
-    // LAB 8: Your code here
     struct Elf * elf = (void *)binary;
     struct Secthdr * sh = (void *)(binary + elf->e_shoff);
     const char * table = (const char *)binary + sh[elf->e_shstrndx].sh_offset;
@@ -86,11 +85,9 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
     info->rip_fn_addr = addr;
     info->rip_fn_narg = 0;
 
-
+    struct Dwarf_Addrs addrs;
     /* Temporarily load kernel cr3 and return back once done.
      * Make sure that you fully understand why it is necessary. */
-
-    // LAB 8: Your code here:
     uint64_t old_cr3 = rcr3();
     if (old_cr3 != kspace.cr3)
         lcr3(kspace.cr3);
@@ -101,9 +98,6 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
      * depending on whether addr is pointing to userspace
      * or kernel space */
 
-    // LAB 8: Your code here:
-
-    struct Dwarf_Addrs addrs;
     if (addr >= MAX_USER_ADDRESS) // kernel space
         load_kernel_dwarf_info(&addrs);
     else
@@ -122,10 +116,10 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
      * Hint: note that we need the address of `call` instruction, but rip holds
      * address of the next instruction, so we should substract 5 from it.
      * Hint: use line_for_address from kern/dwarf_lines.c */
-
-    // LAB 2: Your res here:
-    res = line_for_address(&addrs, addr - 5, line_offset, &info->rip_line);
+    int tmp_int = 0;
+    res = line_for_address(&addrs, addr - CALL_INSN_LEN, line_offset, &tmp_int);
     if (res < 0) goto error;
+    info->rip_line = tmp_int;
 
     /* Find function name corresponding to given address.
      * Hint: note that we need the address of `call` instruction, but rip holds
@@ -133,14 +127,20 @@ debuginfo_rip(uintptr_t addr, struct Ripdebuginfo *info) {
      * Hint: use function_by_info from kern/dwarf.c
      * Hint: info->rip_fn_name can be not NULL-terminated,
      * string returned by function_by_info will always be */
-
-    // LAB 2: Your res here:
-    res = function_by_info(&addrs, addr - 5, offset, &tmp_buf, &info->rip_fn_addr);
-    if (res < 0) return 0;;
+    uintptr_t tmp_uintptr = 0;
+    res = function_by_info(&addrs, addr - CALL_INSN_LEN, offset, &tmp_buf, &tmp_uintptr);
+    if (res < 0) goto error;
+    info->rip_fn_addr = tmp_uintptr;
     strncpy(info->rip_fn_name, tmp_buf, sizeof(info->rip_fn_name));
-    info->rip_fn_namelen = strnlen(info->rip_fn_name, sizeof(info->rip_fn_name));
+    info->rip_fn_namelen = strlen(tmp_buf);
+
+    if (old_cr3 != kspace.cr3)
+        lcr3(old_cr3);
 
 error:
+    if (old_cr3 != kspace.cr3)
+        lcr3(old_cr3);
+
     return res;
 }
 
@@ -151,14 +151,21 @@ find_function(const char *const fname) {
      * and naive_address_by_fname which performs full traversal of DIE tree.
      * It may also be useful to look to kernel symbol table for symbols defined
      * in assembly. */
-
-    // LAB 3: Your code here:
     struct Dwarf_Addrs addrs;
-    uintptr_t offset = 0;
+    uintptr_t fn_offset;
     load_kernel_dwarf_info(&addrs);
-    if (address_by_fname(&addrs, fname, &offset) == 0  && offset)
-        return offset;
-    if (!naive_address_by_fname(&addrs, fname, &offset))
-        return offset;
+    if (!address_by_fname(&addrs, fname, &fn_offset))
+        return fn_offset;
+    if (!naive_address_by_fname(&addrs, fname, &fn_offset))
+        return fn_offset;
+
+    uint8_t * symt_base = (void *)uefi_lp->SymbolTableStart;
+    uint8_t * symt_end = (void *)uefi_lp->SymbolTableEnd;
+    uint8_t * strt = (void *)uefi_lp->StringTableStart;
+    struct Elf64_Sym * entry;
+    for (entry = ((struct Elf64_Sym *)symt_base) + 1; entry < (struct Elf64_Sym *)symt_end; entry++) 
+        if (!strcmp((char *)&strt[entry->st_name], fname)) 
+            return (uintptr_t)entry->st_value;
+
     return 0;
 }

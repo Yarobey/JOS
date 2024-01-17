@@ -12,3 +12,5 @@ fun:mon_backtrace
 
 # KASAN itself should not be instrumented
 src:llvm/asan/*
+
+src:lib/printfmt.c

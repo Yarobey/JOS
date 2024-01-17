@@ -112,7 +112,6 @@ devfile_read(struct Fd *fd, void *buf, size_t n) {
      * bytes read will be written back to fsipcbuf by the file
      * system server. */
 
-    // LAB 10: Your code here:
     size_t i;
     for (i = 0; i < n;) {
         fsipcbuf.read.req_fileid = fd->fd_file.id;
@@ -142,8 +141,6 @@ devfile_write(struct Fd *fd, const void *buf, size_t n) {
      * remember that write is always allowed to write *fewer*
      * bytes than requested, so that multiple IPC requests are
      * potentially required. */
-
-    // LAB 10: Your code here:
     size_t i = 0;
     while (i < n) {
         size_t write_now = MIN(n - i, sizeof(fsipcbuf.write.req_buf));

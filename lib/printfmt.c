@@ -220,10 +220,16 @@ vprintfmt(void (*putch)(int, void *), void *put_arg, const char *fmt, va_list ap
             goto number;
 
         case 'o': /* (unsigned) octal */
-            // LAB 1: Your code here:
             num = get_unsigned(&aq, lflag, zflag);
-            base = 8;
-            goto number;
+            int max_oct_deg = 1, buf = num;
+            while (buf > 7) max_oct_deg *= 8, buf /= 8;
+
+            while (max_oct_deg) {
+                putch((char)(num / max_oct_deg + '0'), put_arg);
+                num %= max_oct_deg;
+                max_oct_deg /= 8;
+            }
+            break;
 
         case 'p': /* pointer */
             putch('0', put_arg);

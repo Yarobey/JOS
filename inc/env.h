@@ -75,7 +75,7 @@ struct Env {
     /* Exception handling */
     void *env_pgfault_upcall; /* Page fault upcall entry point */
 
-    /* LAB 9 IPC */
+    /* IPC */
     bool env_ipc_recving;    /* Env is blocked receiving */
     uintptr_t env_ipc_dstva; /* VA at which to map received page */
     size_t env_ipc_maxsz;    /* maximal size of received region */

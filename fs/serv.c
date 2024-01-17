@@ -199,7 +199,7 @@ serve_read(envid_t envid, union Fsipc *ipc) {
         cprintf("serve_read %08x %08x %08x\n",
                 envid, req->req_fileid, (uint32_t)req->req_n);
     }
-    // LAB 10: Your code here
+
     if ((r = openfile_lookup(envid, req->req_fileid, &o)) < 0)
         return r;
     if (req->req_n > PAGE_SIZE)
@@ -222,7 +222,6 @@ serve_write(envid_t envid, union Fsipc *ipc) {
     if (debug)
         cprintf("serve_write %08x %08x %08x\n", envid, req->req_fileid, (uint32_t)req->req_n);
 
-    // LAB 10: Your code here
     if ((r = openfile_lookup(envid, req->req_fileid, &o)) < 0)
         return r;
     if ((cnt = file_write(o->o_file, req->req_buf, req->req_n, o->o_fd->fd_offset)) > 0)

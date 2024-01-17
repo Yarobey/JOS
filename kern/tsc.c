@@ -190,9 +190,6 @@ print_timer_error(void) {
 
 /* Use print_time function to print timert result
  * Use print_timer_error function to print error. */
-
-// LAB 5: Your code here:
-
 static bool timer_started = 0;
 static int timer_id = -1;
 static uint64_t timer = 0;
@@ -200,16 +197,45 @@ static uint64_t freq = 0;
 
 void
 timer_start(const char *name) {
-    (void)timer_started;
-    (void)timer_id;
-    (void)timer;
-    (void)freq;
+    for (int i = 0; i < MAX_TIMERS; i++) {
+        /* If timer_name is defined and equal to search name, then set
+         * timer_id, set timer_started flag and read tsc register to save
+         * the time when this timer has started. Also we save CPU freq
+         * (handler func is saved to timertab for hpet0, hpet1 timers,
+         * functions hpet_cpu_frequency, pmtimer_cpu_frequency). */
+        if (timertab[i].timer_name && !strcmp(timertab[i].timer_name, name)) {
+            timer_id = i;
+            timer_started = 1;
+            freq = timertab[i].get_cpu_freq();
+            timer = read_tsc();
+            cprintf("Timer %s has started!\n", name);
+            return;
+        }
+    }
+    // If we returned from for cycle it is an error.
+    print_timer_error();
 }
 
 void
 timer_stop(void) {
+    if (!timer_started) {
+        print_timer_error();
+        return;
+    }
+    timer_started = 0;
+    print_time((read_tsc() - timer) / freq);
 }
 
 void
 timer_cpu_frequency(const char *name) {
+    for (int i = 0; i < MAX_TIMERS; i++) {
+        /* The same actions as in timer_start, but we jsut print
+         * CPU freq here. */
+        if (timertab[i].timer_name && !strcmp(timertab[i].timer_name, name)) {
+            cprintf("CPU frequency: %lu\n", timertab[i].get_cpu_freq());
+            return;
+        }
+    }
+    // If we returned from for cycle it is an error.
+    print_timer_error();
 }

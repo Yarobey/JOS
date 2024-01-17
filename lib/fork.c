@@ -18,7 +18,6 @@
  */
 envid_t
 fork(void) {
-    // LAB 9: Your code here.
     envid_t envid = sys_exofork();
     if (envid < 0)
         return envid;
@@ -32,7 +31,7 @@ fork(void) {
         || sys_env_set_status(envid, ENV_RUNNABLE))
         return -1;
 
-    return envid;;
+    return envid;
 }
 
 envid_t

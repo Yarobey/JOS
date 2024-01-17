@@ -21,7 +21,6 @@
  *   a perfectly valid place to map a page.) */
 int32_t
 ipc_recv(envid_t *from_env_store, void *pg, size_t *size, int *perm_store) {
-    // LAB 9: Your code here:
     if (!pg)
         pg = (void *)MAX_USER_ADDRESS;
 
@@ -56,7 +55,6 @@ ipc_recv(envid_t *from_env_store, void *pg, size_t *size, int *perm_store) {
  *   as meaning "no page".  (Zero is not the right value.) */
 void
 ipc_send(envid_t to_env, uint32_t val, void *pg, size_t size, int perm) {
-    // LAB 9: Your code here:
     if (!pg)
         pg = (void *)MAX_USER_ADDRESS;
 
