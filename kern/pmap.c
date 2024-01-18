@@ -1167,7 +1167,8 @@ map_physical_region(struct AddressSpace *dst, uintptr_t dstart, uintptr_t pstart
             struct Page *page = page_lookup(NULL, pstart, class, PARTIAL_NODE, 1);
             if (flags & MAP_USER_MMIO) {
                 if (!page) return -E_NO_MEM;
-                if (page->refc) return -E_NO_ENT;
+                if (page->refc && !(pstart >= 0xe0000000 && pstart <= 0xe0000000 + 0x10000000)) return -E_NO_ENT;
+                if (page->refc > 1) return -E_NO_ENT;
             }
             assert(page);
             if ((res = map_page(dst, start, page, flags)) < 0) return res;
@@ -1181,7 +1182,8 @@ map_physical_region(struct AddressSpace *dst, uintptr_t dstart, uintptr_t pstart
             struct Page *page = page_lookup(NULL, pstart, class, PARTIAL_NODE, 1);
             if (flags & MAP_USER_MMIO) {
                 if (!page) return -E_NO_MEM;
-                if (page->refc) return -E_NO_ENT;
+                if (page->refc && !(pstart >= 0xe0000000 && pstart <= 0xe0000000 + 0x10000000)) return -E_NO_ENT;
+                if (page->refc > 1) return -E_NO_ENT;
             }
             assert(page);
             if ((res = map_page(dst, start, page, flags)) < 0) return res;
