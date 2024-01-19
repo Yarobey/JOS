@@ -145,7 +145,6 @@ mon_virt(int argc, char **argv, struct Trapframe *tf) {
     return 0;
 }
 
-// LAB 4: Your code here
 int
 mon_dumpcmos(int argc, char **argv, struct Trapframe *tf) {
     // Dump CMOS memory in the following format:

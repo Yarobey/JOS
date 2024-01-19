@@ -105,8 +105,6 @@ InitGraphics (
   }
 
   //
-  // LAB 1: Your code here.
-  //
   // Switch to the maximum or any other resolution of your preference.
   // Refer to Graphics Output Protocol description in UEFI spec for
   // more details.
@@ -278,7 +276,6 @@ GetKernelFile (
   // (use gEfiLoadedImageProtocolGuid) from gImageHandle to
   // get loader's containing device.
   //
-  // LAB 1: Your code here
   Status = gBS->HandleProtocol (
     gImageHandle,
     &gEfiLoadedImageProtocolGuid,
@@ -300,7 +297,6 @@ GetKernelFile (
   // (use gEfiSimpleFileSystemProtocolGuid) from LoadedImage->DeviceHandle
   // to read the kernel from it later.
   //
-  // LAB 1: Your code here
   Status = gBS->HandleProtocol (
     LoadedImage->DeviceHandle,
     &gEfiSimpleFileSystemProtocolGuid,
@@ -316,7 +312,6 @@ GetKernelFile (
   // Use FileSystem->OpenVolume() to open root directory, in which kernel is stored
   // NOTE: Don't forget to Use ->Close after you've done using it.
   //
-  // LAB 1: Your code here
   Status = FileSystem->OpenVolume (
     FileSystem,
     &CurrentDriveRoot
@@ -331,7 +326,6 @@ GetKernelFile (
   // Use ->Open to open kernel file located at KERNEL_PATH
   // for reading (as EFI_FILE_MODE_READ)
   //
-  // LAB 1: Your code here
   Status = CurrentDriveRoot->Open (
     CurrentDriveRoot,
     &KernelFile,
